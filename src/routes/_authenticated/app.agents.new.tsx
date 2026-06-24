@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,8 +8,12 @@ import { indexDocument } from "@/lib/ai.functions";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Calendar, Check, FileText, Loader2, Upload, X } from "lucide-react";
 import { extractTextFromFile, isSupportedFile, MAX_BYTES } from "@/lib/text-extract";
+import { getTemplate } from "@/lib/templates";
+
+const searchSchema = z.object({ template: z.string().optional() });
 
 export const Route = createFileRoute("/_authenticated/app/agents/new")({
+  validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Criar agente — AI Workforce" }] }),
   component: NewAgentPage,
 });
@@ -18,10 +23,12 @@ type StagedFile = { id: string; file: File; status: "pending" | "uploading" | "r
 
 function NewAgentPage() {
   const navigate = useNavigate();
+  const { template: templateId } = Route.useSearch();
+  const template = getTemplate(templateId);
   const indexFn = useServerFn(indexDocument);
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
-  const [objective, setObjective] = useState("");
+  const [name, setName] = useState(template?.name ?? "");
+  const [objective, setObjective] = useState(template?.objective ?? "");
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [schedule, setSchedule] = useState<Schedule>("manual");
   const [submitting, setSubmitting] = useState(false);

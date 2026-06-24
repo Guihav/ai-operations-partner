@@ -268,11 +268,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_events: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: number
+          user_id: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_and_record_rate_limit: {
+        Args: { _bucket: string; _max: number; _window_seconds: number }
+        Returns: boolean
+      }
       match_document_chunks: {
         Args: {
           match_agent_id: string
