@@ -126,6 +126,16 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     const startedAt = Date.now();
     const { agentId, message } = data;
 
+    // Rate limit: max 20 mensagens por minuto por usuário
+    const { data: allowed, error: rlErr } = await context.supabase.rpc(
+      "check_and_record_rate_limit",
+      { _bucket: "chat", _max: 20, _window_seconds: 60 },
+    );
+    if (rlErr) throw rlErr;
+    if (!allowed) {
+      throw new Error("Você atingiu o limite de mensagens por minuto. Aguarde alguns segundos.");
+    }
+
     const { data: agent, error: aErr } = await context.supabase
       .from("agents")
       .select("id, name, objective")

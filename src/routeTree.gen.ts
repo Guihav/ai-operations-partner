@@ -14,6 +14,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppExecutionsRouteImport } from './routes/_authenticated/app.executions'
 import { Route as AuthenticatedAppAgentsNewRouteImport } from './routes/_authenticated/app.agents.new'
 import { Route as AuthenticatedAppAgentsAgentIdRouteImport } from './routes/_authenticated/app.agents.$agentId'
 
@@ -41,6 +44,24 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppTemplatesRoute =
+  AuthenticatedAppTemplatesRouteImport.update({
+    id: '/app/templates',
+    path: '/app/templates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/app/settings',
+    path: '/app/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppExecutionsRoute =
+  AuthenticatedAppExecutionsRouteImport.update({
+    id: '/app/executions',
+    path: '/app/executions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppAgentsNewRoute =
   AuthenticatedAppAgentsNewRouteImport.update({
     id: '/app/agents/new',
@@ -58,6 +79,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/executions': typeof AuthenticatedAppExecutionsRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
@@ -66,6 +90,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/executions': typeof AuthenticatedAppExecutionsRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
@@ -76,6 +103,9 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/app/executions': typeof AuthenticatedAppExecutionsRoute
+  '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/_authenticated/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
@@ -86,6 +116,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/app/executions'
+    | '/app/settings'
+    | '/app/templates'
     | '/app/'
     | '/app/agents/$agentId'
     | '/app/agents/new'
@@ -94,6 +127,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/app/executions'
+    | '/app/settings'
+    | '/app/templates'
     | '/app'
     | '/app/agents/$agentId'
     | '/app/agents/new'
@@ -103,6 +139,9 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/app/executions'
+    | '/_authenticated/app/settings'
+    | '/_authenticated/app/templates'
     | '/_authenticated/app/'
     | '/_authenticated/app/agents/$agentId'
     | '/_authenticated/app/agents/new'
@@ -152,6 +191,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/templates': {
+      id: '/_authenticated/app/templates'
+      path: '/app/templates'
+      fullPath: '/app/templates'
+      preLoaderRoute: typeof AuthenticatedAppTemplatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
+      path: '/app/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/executions': {
+      id: '/_authenticated/app/executions'
+      path: '/app/executions'
+      fullPath: '/app/executions'
+      preLoaderRoute: typeof AuthenticatedAppExecutionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/agents/new': {
       id: '/_authenticated/app/agents/new'
       path: '/app/agents/new'
@@ -170,12 +230,18 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppExecutionsRoute: typeof AuthenticatedAppExecutionsRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppTemplatesRoute: typeof AuthenticatedAppTemplatesRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAgentsAgentIdRoute: typeof AuthenticatedAppAgentsAgentIdRoute
   AuthenticatedAppAgentsNewRoute: typeof AuthenticatedAppAgentsNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppExecutionsRoute: AuthenticatedAppExecutionsRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppTemplatesRoute: AuthenticatedAppTemplatesRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAgentsAgentIdRoute: AuthenticatedAppAgentsAgentIdRoute,
   AuthenticatedAppAgentsNewRoute: AuthenticatedAppAgentsNewRoute,
