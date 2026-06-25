@@ -253,7 +253,12 @@ function DashboardPage() {
           </section>
         </div>
 
+        <div className="mt-8">
+          <ChartBarInteractive data={dashboard?.seriesFull ?? []} />
+        </div>
+
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
+
           <section className="lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold tracking-tight">Seus agentes</h2>
