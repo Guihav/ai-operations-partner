@@ -525,6 +525,7 @@ export type Database = {
           similarity: number
         }[]
       }
+      shares_workspace_with: { Args: { _other: string }; Returns: boolean }
       workspace_role_of: {
         Args: { _uid: string; _ws: string }
         Returns: Database["public"]["Enums"]["workspace_role"]
