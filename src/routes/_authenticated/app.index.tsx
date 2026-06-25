@@ -108,6 +108,11 @@ function DashboardPage() {
         Execuções: v.execs,
         Horas: Number(v.hours.toFixed(2)),
       }));
+      const seriesFull = Object.entries(byDay).map(([date, v]) => ({
+        date,
+        execucoes: v.execs,
+        horas: Number(v.hours.toFixed(2)),
+      }));
 
       // Top agents
       const byAgent: Record<string, { name: string; execs: number; hours: number }> = {};
