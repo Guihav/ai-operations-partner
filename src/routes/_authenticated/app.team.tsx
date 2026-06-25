@@ -39,21 +39,20 @@ function TeamPage() {
     queryKey: ["team", "members", currentWorkspaceId],
     enabled: !!currentWorkspaceId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: mem, error } = await supabase
         .from("workspace_members")
-        .select("id, user_id, role, created_at, profiles:profiles!workspace_members_user_id_fkey(full_name)")
+        .select("id, user_id, role, created_at")
         .eq("workspace_id", currentWorkspaceId!)
         .order("created_at", { ascending: true });
-      if (error) {
-        // fallback without join if FK relation not named
-        const { data: simple } = await supabase
-          .from("workspace_members")
-          .select("id, user_id, role, created_at")
-          .eq("workspace_id", currentWorkspaceId!)
-          .order("created_at", { ascending: true });
-        return (simple ?? []).map((m) => ({ ...m, profiles: null as { full_name: string | null } | null }));
-      }
-      return data ?? [];
+      if (error) throw error;
+      if (!mem || mem.length === 0) return [];
+      const ids = mem.map((m) => m.user_id);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", ids);
+      const byId = new Map((profs ?? []).map((p) => [p.id, p.full_name]));
+      return mem.map((m) => ({ ...m, full_name: byId.get(m.user_id) ?? null }));
     },
   });
 
@@ -217,10 +216,10 @@ function TeamPage() {
               <div key={m.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="flex items-center gap-3">
                   <div className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
-                    {(m.profiles?.full_name ?? m.user_id).slice(0, 1).toUpperCase()}
+                    {(m.full_name ?? m.user_id).slice(0, 1).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{m.profiles?.full_name ?? "—"}</p>
+                    <p className="text-sm font-medium">{m.full_name ?? "—"}</p>
                     <p className="text-xs text-muted-foreground">ID {m.user_id.slice(0, 8)}…</p>
                   </div>
                 </div>
