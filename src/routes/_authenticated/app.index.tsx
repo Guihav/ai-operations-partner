@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
+import { ChartBarInteractive } from "@/components/dashboard/chart-bar-interactive";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace-context";
 import {
@@ -108,6 +109,11 @@ function DashboardPage() {
         Execuções: v.execs,
         Horas: Number(v.hours.toFixed(2)),
       }));
+      const seriesFull = Object.entries(byDay).map(([date, v]) => ({
+        date,
+        execucoes: v.execs,
+        horas: Number(v.hours.toFixed(2)),
+      }));
 
       // Top agents
       const byAgent: Record<string, { name: string; execs: number; hours: number }> = {};
@@ -132,6 +138,7 @@ function DashboardPage() {
         hoursSaved: totalHours,
         members: memberCount ?? 0,
         series,
+        seriesFull,
         topAgents,
         agentsList: agents ?? [],
         recent: recent ?? [],
@@ -246,7 +253,12 @@ function DashboardPage() {
           </section>
         </div>
 
+        <div className="mt-8">
+          <ChartBarInteractive data={dashboard?.seriesFull ?? []} />
+        </div>
+
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
+
           <section className="lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold tracking-tight">Seus agentes</h2>
