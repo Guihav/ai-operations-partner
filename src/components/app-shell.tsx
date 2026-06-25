@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bot,
+  ClipboardList,
   History,
   LayoutDashboard,
   LogOut,
@@ -8,32 +9,51 @@ import {
   Plus,
   Settings,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import { useServerFn } from "@tanstack/react-start";
+import { logAuditEvent } from "@/lib/audit.functions";
 
 const NAV = [
   { to: "/app", label: "Visão geral", icon: LayoutDashboard, exact: true },
   { to: "/app/templates", label: "Templates", icon: Sparkles },
   { to: "/app/executions", label: "Execuções", icon: History },
+  { to: "/app/team", label: "Equipe", icon: Users },
+  { to: "/app/audit", label: "Auditoria", icon: ClipboardList },
   { to: "/app/settings", label: "Configurações", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <WorkspaceProvider>
+      <AppShellInner>{children}</AppShellInner>
+    </WorkspaceProvider>
+  );
+}
+
+function AppShellInner({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { currentWorkspaceId } = useWorkspace();
+  const auditFn = useServerFn(logAuditEvent);
 
   const { data: agents = [] } = useQuery({
-    queryKey: ["agents"],
+    queryKey: ["agents", currentWorkspaceId],
+    enabled: !!currentWorkspaceId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agents")
         .select("id, name, status")
+        .eq("workspace_id", currentWorkspaceId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -55,6 +75,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   });
 
   async function handleSignOut() {
+    try {
+      await auditFn({ data: { action: "auth.logout", workspaceId: currentWorkspaceId } });
+    } catch {
+      /* noop */
+    }
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
@@ -80,6 +105,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <X className="h-4 w-4" />
         </button>
+      </div>
+
+      <div className="border-b border-sidebar-border p-3">
+        <WorkspaceSwitcher />
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 text-sm">
@@ -175,12 +204,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar — desktop */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
         {sidebar}
       </aside>
 
-      {/* Sidebar — mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true">
           <div
@@ -193,9 +220,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {/* Main */}
       <main className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile top bar */}
         <div className="flex h-12 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
           <button
             className="grid h-8 w-8 place-items-center rounded-md text-foreground hover:bg-accent"
