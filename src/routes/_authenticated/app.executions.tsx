@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { useWorkspace } from "@/lib/workspace-context";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Bot, Clock } from "lucide-react";
@@ -12,12 +13,15 @@ export const Route = createFileRoute("/_authenticated/app/executions")({
 });
 
 function ExecutionsPage() {
+  const { currentWorkspaceId } = useWorkspace();
   const { data = [], isLoading } = useQuery({
-    queryKey: ["executions", "all"],
+    queryKey: ["executions", "all", currentWorkspaceId],
+    enabled: !!currentWorkspaceId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("executions")
         .select("id, prompt, response, hours_saved, status, created_at, agent_id, agents(name)")
+        .eq("workspace_id", currentWorkspaceId!)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
