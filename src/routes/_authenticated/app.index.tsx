@@ -137,6 +137,7 @@ function DashboardPage() {
         hoursSaved: totalHours,
         members: memberCount ?? 0,
         series,
+        seriesFull,
         topAgents,
         agentsList: agents ?? [],
         recent: recent ?? [],
