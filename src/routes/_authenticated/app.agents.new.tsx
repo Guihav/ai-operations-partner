@@ -5,6 +5,8 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { indexDocument } from "@/lib/ai.functions";
+import { logAuditEvent } from "@/lib/audit.functions";
+import { useWorkspace } from "@/lib/workspace-context";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Calendar, Check, FileText, Loader2, Upload, X } from "lucide-react";
 import { extractTextFromFile, isSupportedFile, MAX_BYTES } from "@/lib/text-extract";
@@ -26,6 +28,8 @@ function NewAgentPage() {
   const { template: templateId } = Route.useSearch();
   const template = getTemplate(templateId);
   const indexFn = useServerFn(indexDocument);
+  const auditFn = useServerFn(logAuditEvent);
+  const { currentWorkspaceId } = useWorkspace();
   const [step, setStep] = useState(0);
   const [name, setName] = useState(template?.name ?? "");
   const [objective, setObjective] = useState(template?.objective ?? "");
@@ -58,6 +62,10 @@ function NewAgentPage() {
   }
 
   async function createAgent() {
+    if (!currentWorkspaceId) {
+      toast.error("Selecione um workspace primeiro");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -67,6 +75,7 @@ function NewAgentPage() {
         .from("agents")
         .insert({
           owner_id: u.user.id,
+          workspace_id: currentWorkspaceId,
           name: name.trim(),
           objective: objective.trim(),
           schedule,
@@ -74,6 +83,18 @@ function NewAgentPage() {
         .select("id")
         .single();
       if (error) throw error;
+
+      try {
+        await auditFn({
+          data: {
+            action: "agent.created",
+            workspaceId: currentWorkspaceId,
+            resourceType: "agent",
+            resourceId: agent.id,
+            metadata: { name: name.trim() },
+          },
+        });
+      } catch {/* noop */}
 
       for (const f of files) {
         try {
@@ -89,6 +110,7 @@ function NewAgentPage() {
             .insert({
               agent_id: agent.id,
               owner_id: u.user.id,
+              workspace_id: currentWorkspaceId,
               file_name: f.file.name,
               file_path: path,
               mime_type: f.file.type,
@@ -101,6 +123,18 @@ function NewAgentPage() {
 
           const text = await extractTextFromFile(f.file);
           await indexFn({ data: { documentId: doc.id, text } });
+
+          try {
+            await auditFn({
+              data: {
+                action: "document.uploaded",
+                workspaceId: currentWorkspaceId,
+                resourceType: "document",
+                resourceId: doc.id,
+                metadata: { name: f.file.name, agent_id: agent.id },
+              },
+            });
+          } catch {/* noop */}
 
           setFiles((prev) => prev.map((x) => (x.id === f.id ? { ...x, status: "ready" } : x)));
         } catch (e) {
@@ -195,7 +229,7 @@ function NewAgentPage() {
           {step === 2 && (
             <Step
               title="Adicione conhecimento (opcional)"
-              subtitle="Suba documentos da empresa. Eles viram a memória do agente — privados, só você acessa."
+              subtitle="Suba documentos da empresa. Eles viram a memória do agente — privados, só sua equipe acessa."
             >
               <label
                 htmlFor="files"

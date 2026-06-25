@@ -5,6 +5,7 @@ import { z } from "zod";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const EMBED_MODEL = "openai/text-embedding-3-small";
+const MAX_TOKENS = 600;
 
 function getKey() {
   const key = process.env.LOVABLE_API_KEY;
@@ -57,10 +58,11 @@ export const indexDocument = createServerFn({ method: "POST" })
 
     const { data: doc, error: docErr } = await context.supabase
       .from("agent_documents")
-      .select("id, agent_id, owner_id")
+      .select("id, agent_id, owner_id, workspace_id")
       .eq("id", documentId)
       .maybeSingle();
     if (docErr || !doc) throw new Error("Documento não encontrado");
+    if (!doc.workspace_id) throw new Error("Documento sem workspace");
 
     const chunks = chunkText(text);
     if (chunks.length === 0) {
@@ -75,6 +77,7 @@ export const indexDocument = createServerFn({ method: "POST" })
       document_id: string;
       agent_id: string;
       owner_id: string;
+      workspace_id: string;
       content: string;
       chunk_index: number;
       embedding: string;
@@ -86,6 +89,7 @@ export const indexDocument = createServerFn({ method: "POST" })
         document_id: doc.id,
         agent_id: doc.agent_id,
         owner_id: doc.owner_id,
+        workspace_id: doc.workspace_id,
         content: chunks[i],
         chunk_index: i,
         embedding: `[${vec.join(",")}]`,
@@ -126,7 +130,6 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     const startedAt = Date.now();
     const { agentId, message } = data;
 
-    // Rate limit: max 20 mensagens por minuto por usuário
     const { data: allowed, error: rlErr } = await context.supabase.rpc(
       "check_and_record_rate_limit",
       { _bucket: "chat", _max: 20, _window_seconds: 60 },
@@ -138,32 +141,38 @@ export const sendChatMessage = createServerFn({ method: "POST" })
 
     const { data: agent, error: aErr } = await context.supabase
       .from("agents")
-      .select("id, name, objective")
+      .select("id, name, objective, workspace_id")
       .eq("id", agentId)
       .maybeSingle();
     if (aErr || !agent) throw new Error("Agente não encontrado");
+    if (!agent.workspace_id) throw new Error("Agente sem workspace");
 
-    // Ensure conversation
+    const wsId = agent.workspace_id;
+
     let conversationId = data.conversationId;
     if (!conversationId) {
       const { data: conv, error: cErr } = await context.supabase
         .from("conversations")
-        .insert({ agent_id: agentId, owner_id: context.userId, title: message.slice(0, 60) })
+        .insert({
+          agent_id: agentId,
+          owner_id: context.userId,
+          workspace_id: wsId,
+          title: message.slice(0, 60),
+        })
         .select("id")
         .single();
       if (cErr) throw cErr;
       conversationId = conv.id;
     }
 
-    // Save user message
     await context.supabase.from("messages").insert({
       conversation_id: conversationId,
       owner_id: context.userId,
+      workspace_id: wsId,
       role: "user",
       content: message,
     });
 
-    // RAG retrieve
     let contextBlock = "";
     let usedChunks = 0;
     try {
@@ -183,18 +192,19 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       console.error("RAG retrieve failed", e);
     }
 
-    const systemPrompt = `Você é o ${agent.name}, um assistente de IA operacional para uma empresa.
-Objetivo do agente: ${agent.objective}
+    const systemPrompt = `Você é "${agent.name}", agente operacional especializado.
+Missão do agente: ${agent.objective}
 
-Regras:
-- Sempre que possível, baseie suas respostas no conhecimento da empresa (fontes abaixo).
-- Se as fontes não cobrirem a pergunta, diga isso claramente e responda com cautela.
-- Seja direto, profissional e objetivo. Use português do Brasil.
-- Quando útil, organize a resposta em tópicos curtos.
+Estilo de resposta (obrigatório):
+- Direto e concreto. Sem rodeios, sem repetir a pergunta, sem encerramentos genéricos.
+- Máximo 4 frases curtas OU até 6 bullets objetivos.
+- Cada bullet começa com verbo no imperativo ou um número.
+- Se faltar contexto, peça em 1 linha exatamente o que precisa.
+- Use português do Brasil.
+- Cite a fonte ([Fonte N]) quando usar conhecimento da base.
 
-${contextBlock ? `Conhecimento da empresa:\n${contextBlock}` : "Nenhuma fonte interna disponível para esta pergunta."}`;
+${contextBlock ? `Conhecimento da empresa:\n${contextBlock}` : "Sem fontes internas para esta pergunta. Responda com cautela e diga se for opinião geral."}`;
 
-    // Load short history
     const { data: history } = await context.supabase
       .from("messages")
       .select("role, content")
@@ -213,7 +223,7 @@ ${contextBlock ? `Conhecimento da empresa:\n${contextBlock}` : "Nenhuma fonte in
         "Content-Type": "application/json",
         "Lovable-API-Key": getKey(),
       },
-      body: JSON.stringify({ model: CHAT_MODEL, messages: chatMessages }),
+      body: JSON.stringify({ model: CHAT_MODEL, messages: chatMessages, max_tokens: MAX_TOKENS }),
     });
     if (!aiRes.ok) {
       const t = await aiRes.text();
@@ -224,24 +234,38 @@ ${contextBlock ? `Conhecimento da empresa:\n${contextBlock}` : "Nenhuma fonte in
     const aiJson = (await aiRes.json()) as { choices: { message: { content: string } }[] };
     const reply = aiJson.choices[0]?.message?.content ?? "(sem resposta)";
 
-    // Save assistant message
     await context.supabase.from("messages").insert({
       conversation_id: conversationId,
       owner_id: context.userId,
+      workspace_id: wsId,
       role: "assistant",
       content: reply,
     });
 
-    // ROI: rough estimate — 0.3h per chat execution, more if RAG used
     const hoursSaved = Math.max(0.25, Math.min(1.5, 0.3 + usedChunks * 0.1));
     await context.supabase.from("executions").insert({
       agent_id: agentId,
       owner_id: context.userId,
+      workspace_id: wsId,
       prompt: message,
       response: reply,
       status: "completed",
       hours_saved: hoursSaved,
     });
+
+    // Audit (non-blocking)
+    try {
+      await context.supabase.from("audit_logs").insert({
+        workspace_id: wsId,
+        actor_user_id: context.userId,
+        action: "agent.executed",
+        resource_type: "agent",
+        resource_id: agentId,
+        metadata: { used_chunks: usedChunks, hours_saved: hoursSaved } as never,
+      });
+    } catch (e) {
+      console.error("audit insert failed", e);
+    }
 
     return {
       conversationId,

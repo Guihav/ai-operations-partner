@@ -4,7 +4,11 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+import { TurnstileWidget } from "@/components/turnstile-widget";
+import { useServerFn } from "@tanstack/react-start";
+import { verifyTurnstile } from "@/lib/captcha.functions";
+import { logAuditEvent } from "@/lib/audit.functions";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "signup", "reset"]).optional(),
@@ -26,20 +30,33 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const { mode = "login" } = Route.useSearch();
   const navigate = useNavigate();
+  const verifyFn = useServerFn(verifyTurnstile);
+  const auditFn = useServerFn(logAuditEvent);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const isSignup = mode === "signup";
   const isReset = mode === "reset";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!captchaToken) {
+      toast.error("Aguarde a verificação anti-bot.");
+      return;
+    }
     setLoading(true);
     try {
+      const verify = await verifyFn({ data: { token: captchaToken } });
+      if (!verify.success) {
+        toast.error("Verificação anti-bot falhou. Recarregue a página e tente novamente.");
+        return;
+      }
+
       if (isReset) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -59,10 +76,16 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Conta criada. Bem-vindo(a).");
+        try {
+          await auditFn({ data: { action: "auth.login.success", workspaceId: null, metadata: { signup: true } } });
+        } catch {/* noop */}
         navigate({ to: "/app" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        try {
+          await auditFn({ data: { action: "auth.login.success", workspaceId: null } });
+        } catch {/* noop */}
         navigate({ to: "/app" });
       }
     } catch (err) {
@@ -91,7 +114,6 @@ function AuthPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel */}
       <div className="hidden flex-col justify-between border-r border-border bg-surface p-12 lg:flex">
         <Link to="/" className="flex items-center gap-2">
           <div className="grid h-6 w-6 place-items-center rounded-md bg-primary text-primary-foreground">
@@ -112,7 +134,6 @@ function AuthPage() {
         <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} AI Workforce</p>
       </div>
 
-      {/* Form panel */}
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <Link to="/" className="mb-8 inline-flex items-center gap-2 lg:hidden">
@@ -174,9 +195,16 @@ function AuthPage() {
                 minLength={isSignup ? 8 : undefined}
               />
             )}
+
+            <div className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+              <span>Verificação anti-bot ativa</span>
+            </div>
+            <TurnstileWidget onToken={setCaptchaToken} onError={() => setCaptchaToken(null)} />
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !captchaToken}
               className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
