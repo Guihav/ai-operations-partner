@@ -4,11 +4,8 @@ import { z } from "zod";
 
 const ROLE_ENUM = z.enum(["owner", "admin", "member"]);
 
-async function assertAdmin(
-  supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> },
-  workspaceId: string,
-  userId: string,
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function assertAdmin(supabase: any, workspaceId: string, userId: string) {
   const { data } = await supabase.rpc("workspace_role_of", { _ws: workspaceId, _uid: userId });
   if (data !== "owner" && data !== "admin") throw new Error("Sem permissão");
   return data as "owner" | "admin";

@@ -60,7 +60,7 @@ export const logAuditEvent = createServerFn({ method: "POST" })
       action: data.action,
       resource_type: data.resourceType ?? null,
       resource_id: data.resourceId ?? null,
-      metadata: data.metadata ?? {},
+      metadata: (data.metadata ?? {}) as Record<string, unknown> as never,
       ip,
       user_agent: ua,
     });
