@@ -20,6 +20,8 @@ import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppExecutionsRouteImport } from './routes/_authenticated/app.executions'
 import { Route as AuthenticatedAppAuditRouteImport } from './routes/_authenticated/app.audit'
+import { Route as AuthenticatedAppCrmIndexRouteImport } from './routes/_authenticated/app.crm.index'
+import { Route as AuthenticatedAppCrmPipelineRouteImport } from './routes/_authenticated/app.crm.pipeline'
 import { Route as AuthenticatedAppAgentsNewRouteImport } from './routes/_authenticated/app.agents.new'
 import { Route as AuthenticatedAppAgentsAgentIdRouteImport } from './routes/_authenticated/app.agents.$agentId'
 
@@ -80,6 +82,18 @@ const AuthenticatedAppAuditRoute = AuthenticatedAppAuditRouteImport.update({
   path: '/app/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppCrmIndexRoute =
+  AuthenticatedAppCrmIndexRouteImport.update({
+    id: '/app/crm/',
+    path: '/app/crm/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppCrmPipelineRoute =
+  AuthenticatedAppCrmPipelineRouteImport.update({
+    id: '/app/crm/pipeline',
+    path: '/app/crm/pipeline',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppAgentsNewRoute =
   AuthenticatedAppAgentsNewRouteImport.update({
     id: '/app/agents/new',
@@ -106,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
+  '/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
+  '/app/crm/': typeof AuthenticatedAppCrmIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,6 +136,8 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
+  '/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
+  '/app/crm': typeof AuthenticatedAppCrmIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -136,6 +154,8 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/_authenticated/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
+  '/_authenticated/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
+  '/_authenticated/app/crm/': typeof AuthenticatedAppCrmIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -152,6 +172,8 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/agents/$agentId'
     | '/app/agents/new'
+    | '/app/crm/pipeline'
+    | '/app/crm/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +188,8 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/agents/$agentId'
     | '/app/agents/new'
+    | '/app/crm/pipeline'
+    | '/app/crm'
   id:
     | '__root__'
     | '/'
@@ -181,6 +205,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/agents/$agentId'
     | '/_authenticated/app/agents/new'
+    | '/_authenticated/app/crm/pipeline'
+    | '/_authenticated/app/crm/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -270,6 +296,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/crm/': {
+      id: '/_authenticated/app/crm/'
+      path: '/app/crm'
+      fullPath: '/app/crm/'
+      preLoaderRoute: typeof AuthenticatedAppCrmIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/crm/pipeline': {
+      id: '/_authenticated/app/crm/pipeline'
+      path: '/app/crm/pipeline'
+      fullPath: '/app/crm/pipeline'
+      preLoaderRoute: typeof AuthenticatedAppCrmPipelineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/agents/new': {
       id: '/_authenticated/app/agents/new'
       path: '/app/agents/new'
@@ -296,6 +336,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAgentsAgentIdRoute: typeof AuthenticatedAppAgentsAgentIdRoute
   AuthenticatedAppAgentsNewRoute: typeof AuthenticatedAppAgentsNewRoute
+  AuthenticatedAppCrmPipelineRoute: typeof AuthenticatedAppCrmPipelineRoute
+  AuthenticatedAppCrmIndexRoute: typeof AuthenticatedAppCrmIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -307,6 +349,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAgentsAgentIdRoute: AuthenticatedAppAgentsAgentIdRoute,
   AuthenticatedAppAgentsNewRoute: AuthenticatedAppAgentsNewRoute,
+  AuthenticatedAppCrmPipelineRoute: AuthenticatedAppCrmPipelineRoute,
+  AuthenticatedAppCrmIndexRoute: AuthenticatedAppCrmIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

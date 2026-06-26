@@ -3,6 +3,7 @@ import {
   Bot,
   ClipboardList,
   History,
+  KanbanSquare,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -10,6 +11,7 @@ import {
   Settings,
   Sparkles,
   Users,
+  UsersRound,
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
@@ -23,6 +25,8 @@ import { logAuditEvent } from "@/lib/audit.functions";
 
 const NAV = [
   { to: "/app", label: "Visão geral", icon: LayoutDashboard, exact: true },
+  { to: "/app/crm", label: "CRM", icon: UsersRound, exact: true },
+  { to: "/app/crm/pipeline", label: "Pipeline", icon: KanbanSquare },
   { to: "/app/templates", label: "Templates", icon: Sparkles },
   { to: "/app/executions", label: "Execuções", icon: History },
   { to: "/app/team", label: "Equipe", icon: Users },
