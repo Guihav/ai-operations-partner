@@ -63,10 +63,12 @@ export function TurnstileWidget({
     loadScript()
       .then(() => {
         if (cancelled || !ref.current || !window.turnstile) return;
+        // Clear any previously rendered widget in this container (StrictMode / remount safety)
+        ref.current.innerHTML = "";
         widgetId.current = window.turnstile.render(ref.current, {
           sitekey: SITE_KEY,
           theme: "light",
-          appearance: "interaction-only",
+          appearance: "always",
           callback: (token) => onToken(token),
           "error-callback": () => onError?.(),
           "expired-callback": () => onError?.(),
@@ -81,10 +83,13 @@ export function TurnstileWidget({
         } catch {
           /* noop */
         }
+        widgetId.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={ref} className="cf-turnstile" />;
+  // Note: do NOT add the `cf-turnstile` class — that triggers Cloudflare's
+  // implicit render and conflicts with our explicit render() call.
+  return <div ref={ref} />;
 }
