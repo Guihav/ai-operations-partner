@@ -9,7 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, Phone, Plus, Search, Trash2, Users, KanbanSquare } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/app/crm")({
+export const Route = createFileRoute("/_authenticated/app/crm/")({
   head: () => ({ meta: [{ title: "CRM — AI Workforce" }] }),
   component: CrmContactsPage,
 });
