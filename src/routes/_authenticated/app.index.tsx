@@ -259,9 +259,8 @@ function DashboardPage() {
           <ChartBarInteractive data={dashboard?.seriesFull ?? []} />
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-
-          <section className="lg:col-span-2">
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <section>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold tracking-tight">Seus agentes</h2>
               <Link to="/app/agents/new" className="text-xs text-muted-foreground hover:text-foreground">
@@ -296,29 +295,70 @@ function DashboardPage() {
             )}
           </section>
 
-          <section>
-            <h2 className="text-sm font-semibold tracking-tight">Atividade recente</h2>
-            <div className="surface-card mt-3 divide-y divide-border">
-              {(dashboard?.recent ?? []).length === 0 && (
-                <p className="p-5 text-sm text-muted-foreground">Nenhuma execução ainda.</p>
-              )}
-              {(dashboard?.recent ?? []).map((e) => (
-                <div key={e.id} className="p-4">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="truncate">{e.agents?.name ?? "Agente"}</span>
-                    <span>
-                      {formatDistanceToNow(new Date(e.created_at), { locale: ptBR, addSuffix: true })}
-                    </span>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-foreground">{e.prompt}</p>
-                  <p className="mt-1 text-xs text-primary">
-                    +{Number(e.hours_saved).toFixed(2)}h economizadas
+          <div className="grid gap-6">
+            <section className="surface-card p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Top agentes</h2>
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+              <div className="mt-4 h-64 w-full">
+                {(dashboard?.topAgents ?? []).length === 0 ? (
+                  <p className="grid h-full place-items-center text-xs text-muted-foreground">
+                    Sem dados ainda
                   </p>
-                </div>
-              ))}
-            </div>
-          </section>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboard?.topAgents ?? []} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={90} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                      />
+                      <Bar dataKey="execs" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </section>
+
+            <ChartRadarDefault
+              data={(dashboard?.topAgents ?? []).map((a) => ({
+                label: a.name.length > 12 ? a.name.slice(0, 12) + "…" : a.name,
+                value: a.execs,
+              }))}
+            />
+          </div>
         </div>
+
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold tracking-tight">Atividade recente</h2>
+          <div className="surface-card mt-3 divide-y divide-border">
+            {(dashboard?.recent ?? []).length === 0 && (
+              <p className="p-5 text-sm text-muted-foreground">Nenhuma execução ainda.</p>
+            )}
+            {(dashboard?.recent ?? []).map((e) => (
+              <div key={e.id} className="p-4">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="truncate">{e.agents?.name ?? "Agente"}</span>
+                  <span>
+                    {formatDistanceToNow(new Date(e.created_at), { locale: ptBR, addSuffix: true })}
+                  </span>
+                </div>
+                <p className="mt-1 line-clamp-2 text-sm text-foreground">{e.prompt}</p>
+                <p className="mt-1 text-xs text-primary">
+                  +{Number(e.hours_saved).toFixed(2)}h economizadas
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </AppShell>
   );
