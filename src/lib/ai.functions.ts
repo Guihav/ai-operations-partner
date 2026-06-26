@@ -203,6 +203,12 @@ Estilo de resposta (obrigatório):
 - Use português do Brasil.
 - Cite a fonte ([Fonte N]) quando usar conhecimento da base.
 
+Ferramentas de CRM disponíveis:
+- search_contacts: busque leads/contatos por nome, email ou empresa antes de criar duplicados.
+- create_contact: cadastre novo lead quando o usuário pedir.
+- add_activity: registre uma nota/ligação/email vinculada a um contato.
+Use as ferramentas sempre que a tarefa envolver leads, contatos ou histórico de relacionamento.
+
 ${contextBlock ? `Conhecimento da empresa:\n${contextBlock}` : "Sem fontes internas para esta pergunta. Responda com cautela e diga se for opinião geral."}`;
 
     const { data: history } = await context.supabase
@@ -212,27 +218,66 @@ ${contextBlock ? `Conhecimento da empresa:\n${contextBlock}` : "Sem fontes inter
       .order("created_at", { ascending: true })
       .limit(20);
 
-    const chatMessages = [
+    const tools = buildCrmTools();
+    const chatMessages: ChatMsg[] = [
       { role: "system", content: systemPrompt },
-      ...(history ?? []).map((m) => ({ role: m.role, content: m.content })),
+      ...((history ?? []).map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))),
     ];
 
-    const aiRes = await fetch(`${GATEWAY_URL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": getKey(),
-      },
-      body: JSON.stringify({ model: CHAT_MODEL, messages: chatMessages, max_tokens: MAX_TOKENS }),
-    });
-    if (!aiRes.ok) {
-      const t = await aiRes.text();
-      if (aiRes.status === 429) throw new Error("Limite de requisições atingido. Tente novamente em instantes.");
-      if (aiRes.status === 402) throw new Error("Créditos de IA esgotados. Atualize seu plano.");
-      throw new Error(`IA falhou: ${t}`);
+    let reply = "";
+    let toolCallsRun = 0;
+    for (let step = 0; step < 4; step++) {
+      const aiRes = await fetch(`${GATEWAY_URL}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Lovable-API-Key": getKey() },
+        body: JSON.stringify({
+          model: CHAT_MODEL,
+          messages: chatMessages,
+          tools,
+          tool_choice: "auto",
+          max_tokens: MAX_TOKENS,
+        }),
+      });
+      if (!aiRes.ok) {
+        const t = await aiRes.text();
+        if (aiRes.status === 429) throw new Error("Limite de requisições atingido. Tente novamente em instantes.");
+        if (aiRes.status === 402) throw new Error("Créditos de IA esgotados. Atualize seu plano.");
+        throw new Error(`IA falhou: ${t}`);
+      }
+      const aiJson = (await aiRes.json()) as {
+        choices: { message: { content: string | null; tool_calls?: ToolCall[] } }[];
+      };
+      const msg = aiJson.choices[0]?.message;
+      if (!msg) {
+        reply = "(sem resposta)";
+        break;
+      }
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+        chatMessages.push({
+          role: "assistant",
+          content: msg.content ?? "",
+          tool_calls: msg.tool_calls,
+        });
+        for (const call of msg.tool_calls) {
+          toolCallsRun++;
+          const result = await runCrmTool(call, {
+            supabase: context.supabase,
+            workspaceId: wsId,
+            userId: context.userId,
+            agentId,
+          });
+          chatMessages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify(result).slice(0, 4000),
+          });
+        }
+        continue;
+      }
+      reply = msg.content ?? "(sem resposta)";
+      break;
     }
-    const aiJson = (await aiRes.json()) as { choices: { message: { content: string } }[] };
-    const reply = aiJson.choices[0]?.message?.content ?? "(sem resposta)";
+    if (!reply) reply = "(sem resposta)";
 
     await context.supabase.from("messages").insert({
       conversation_id: conversationId,
