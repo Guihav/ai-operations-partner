@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { KanbanSquare, Loader2, Plus, Trash2, Users } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/app/crm.pipeline")({
+export const Route = createFileRoute("/_authenticated/app/crm/pipeline")({
   head: () => ({ meta: [{ title: "Pipeline — AI Workforce" }] }),
   component: PipelinePage,
 });

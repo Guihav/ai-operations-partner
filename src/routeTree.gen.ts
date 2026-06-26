@@ -19,7 +19,9 @@ import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppExecutionsRouteImport } from './routes/_authenticated/app.executions'
+import { Route as AuthenticatedAppCrmRouteImport } from './routes/_authenticated/app.crm'
 import { Route as AuthenticatedAppAuditRouteImport } from './routes/_authenticated/app.audit'
+import { Route as AuthenticatedAppCrmPipelineRouteImport } from './routes/_authenticated/app.crm.pipeline'
 import { Route as AuthenticatedAppAgentsNewRouteImport } from './routes/_authenticated/app.agents.new'
 import { Route as AuthenticatedAppAgentsAgentIdRouteImport } from './routes/_authenticated/app.agents.$agentId'
 
@@ -75,11 +77,22 @@ const AuthenticatedAppExecutionsRoute =
     path: '/app/executions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppCrmRoute = AuthenticatedAppCrmRouteImport.update({
+  id: '/app/crm',
+  path: '/app/crm',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppAuditRoute = AuthenticatedAppAuditRouteImport.update({
   id: '/app/audit',
   path: '/app/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppCrmPipelineRoute =
+  AuthenticatedAppCrmPipelineRouteImport.update({
+    id: '/pipeline',
+    path: '/pipeline',
+    getParentRoute: () => AuthenticatedAppCrmRoute,
+  } as any)
 const AuthenticatedAppAgentsNewRoute =
   AuthenticatedAppAgentsNewRouteImport.update({
     id: '/app/agents/new',
@@ -99,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/invite/$token': typeof InviteTokenRoute
   '/app/audit': typeof AuthenticatedAppAuditRoute
+  '/app/crm': typeof AuthenticatedAppCrmRouteWithChildren
   '/app/executions': typeof AuthenticatedAppExecutionsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
@@ -106,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
+  '/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -113,6 +128,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/invite/$token': typeof InviteTokenRoute
   '/app/audit': typeof AuthenticatedAppAuditRoute
+  '/app/crm': typeof AuthenticatedAppCrmRouteWithChildren
   '/app/executions': typeof AuthenticatedAppExecutionsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
@@ -120,6 +136,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
+  '/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -129,6 +146,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/app/audit': typeof AuthenticatedAppAuditRoute
+  '/_authenticated/app/crm': typeof AuthenticatedAppCrmRouteWithChildren
   '/_authenticated/app/executions': typeof AuthenticatedAppExecutionsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
@@ -136,6 +154,7 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/_authenticated/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
+  '/_authenticated/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -145,6 +164,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/invite/$token'
     | '/app/audit'
+    | '/app/crm'
     | '/app/executions'
     | '/app/settings'
     | '/app/team'
@@ -152,6 +172,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/agents/$agentId'
     | '/app/agents/new'
+    | '/app/crm/pipeline'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -159,6 +180,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/invite/$token'
     | '/app/audit'
+    | '/app/crm'
     | '/app/executions'
     | '/app/settings'
     | '/app/team'
@@ -166,6 +188,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/agents/$agentId'
     | '/app/agents/new'
+    | '/app/crm/pipeline'
   id:
     | '__root__'
     | '/'
@@ -174,6 +197,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/invite/$token'
     | '/_authenticated/app/audit'
+    | '/_authenticated/app/crm'
     | '/_authenticated/app/executions'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/team'
@@ -181,6 +205,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/agents/$agentId'
     | '/_authenticated/app/agents/new'
+    | '/_authenticated/app/crm/pipeline'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -263,12 +288,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppExecutionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/crm': {
+      id: '/_authenticated/app/crm'
+      path: '/app/crm'
+      fullPath: '/app/crm'
+      preLoaderRoute: typeof AuthenticatedAppCrmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/audit': {
       id: '/_authenticated/app/audit'
       path: '/app/audit'
       fullPath: '/app/audit'
       preLoaderRoute: typeof AuthenticatedAppAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/crm/pipeline': {
+      id: '/_authenticated/app/crm/pipeline'
+      path: '/pipeline'
+      fullPath: '/app/crm/pipeline'
+      preLoaderRoute: typeof AuthenticatedAppCrmPipelineRouteImport
+      parentRoute: typeof AuthenticatedAppCrmRoute
     }
     '/_authenticated/app/agents/new': {
       id: '/_authenticated/app/agents/new'
@@ -287,8 +326,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAppCrmRouteChildren {
+  AuthenticatedAppCrmPipelineRoute: typeof AuthenticatedAppCrmPipelineRoute
+}
+
+const AuthenticatedAppCrmRouteChildren: AuthenticatedAppCrmRouteChildren = {
+  AuthenticatedAppCrmPipelineRoute: AuthenticatedAppCrmPipelineRoute,
+}
+
+const AuthenticatedAppCrmRouteWithChildren =
+  AuthenticatedAppCrmRoute._addFileChildren(AuthenticatedAppCrmRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppAuditRoute: typeof AuthenticatedAppAuditRoute
+  AuthenticatedAppCrmRoute: typeof AuthenticatedAppCrmRouteWithChildren
   AuthenticatedAppExecutionsRoute: typeof AuthenticatedAppExecutionsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
@@ -300,6 +351,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppAuditRoute: AuthenticatedAppAuditRoute,
+  AuthenticatedAppCrmRoute: AuthenticatedAppCrmRouteWithChildren,
   AuthenticatedAppExecutionsRoute: AuthenticatedAppExecutionsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
