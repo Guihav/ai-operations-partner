@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { ChartBarInteractive } from "@/components/dashboard/chart-bar-interactive";
+import { ChartRadarDefault } from "@/components/dashboard/chart-radar";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace-context";
 import {
@@ -27,6 +28,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({ meta: [{ title: "Painel — AI Workforce" }] }),
