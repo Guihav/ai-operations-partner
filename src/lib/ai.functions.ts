@@ -13,6 +13,175 @@ function getKey() {
   return key;
 }
 
+/* ---------------- CRM tool calling ---------------- */
+
+type ToolCall = {
+  id: string;
+  type: "function";
+  function: { name: string; arguments: string };
+};
+
+type ChatMsg =
+  | { role: "system"; content: string }
+  | { role: "user"; content: string }
+  | { role: "assistant"; content: string; tool_calls?: ToolCall[] }
+  | { role: "tool"; tool_call_id: string; content: string };
+
+function buildCrmTools() {
+  return [
+    {
+      type: "function",
+      function: {
+        name: "search_contacts",
+        description: "Busca contatos/leads do workspace por nome, email ou empresa. Use antes de criar duplicados.",
+        parameters: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Termo de busca parcial (nome, email ou empresa)" },
+            limit: { type: "number", description: "Máximo de resultados (1-20)", default: 10 },
+          },
+          required: ["query"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "create_contact",
+        description: "Cria um novo contato/lead no CRM. Sempre confirme o nome antes de criar.",
+        parameters: {
+          type: "object",
+          properties: {
+            full_name: { type: "string" },
+            email: { type: "string" },
+            phone: { type: "string" },
+            company: { type: "string" },
+            job_title: { type: "string" },
+            status: { type: "string", enum: ["lead", "qualified", "customer", "lost"] },
+            notes: { type: "string" },
+          },
+          required: ["full_name"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "add_activity",
+        description: "Registra uma atividade (nota/ligação/email/reunião) vinculada a um contato.",
+        parameters: {
+          type: "object",
+          properties: {
+            contact_id: { type: "string", description: "UUID do contato. Obtenha via search_contacts." },
+            type: { type: "string", enum: ["note", "call", "email", "meeting", "task"] },
+            title: { type: "string" },
+            body: { type: "string" },
+          },
+          required: ["contact_id", "title"],
+        },
+      },
+    },
+  ];
+}
+
+async function runCrmTool(
+  call: ToolCall,
+  ctx: {
+    supabase: { from: (t: string) => unknown };
+    workspaceId: string;
+    userId: string;
+    agentId: string;
+  },
+): Promise<unknown> {
+  let args: Record<string, unknown> = {};
+  try {
+    args = JSON.parse(call.function.arguments || "{}");
+  } catch {
+    return { error: "invalid_arguments" };
+  }
+  const sb = ctx.supabase as unknown as {
+    from: (t: string) => {
+      select: (...a: unknown[]) => unknown;
+      insert: (r: unknown) => unknown;
+    };
+  };
+
+  if (call.function.name === "search_contacts") {
+    const query = String(args.query ?? "").trim();
+    const limit = Math.min(Math.max(Number(args.limit ?? 10), 1), 20);
+    if (!query) return { results: [] };
+    const builder = sb.from("crm_contacts") as unknown as {
+      select: (s: string) => {
+        eq: (c: string, v: string) => {
+          or: (f: string) => { limit: (n: number) => Promise<{ data: unknown[]; error: unknown }> };
+        };
+      };
+    };
+    const { data, error } = await builder
+      .select("id, full_name, email, phone, company, job_title, status")
+      .eq("workspace_id", ctx.workspaceId)
+      .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,company.ilike.%${query}%`)
+      .limit(limit);
+    if (error) return { error: String(error) };
+    return { results: data ?? [] };
+  }
+
+  if (call.function.name === "create_contact") {
+    const fullName = String(args.full_name ?? "").trim();
+    if (!fullName) return { error: "full_name é obrigatório" };
+    const status = ["lead", "qualified", "customer", "lost"].includes(String(args.status))
+      ? String(args.status)
+      : "lead";
+    const ins = sb.from("crm_contacts") as unknown as {
+      insert: (r: unknown) => {
+        select: (s: string) => { single: () => Promise<{ data: { id: string } | null; error: unknown }> };
+      };
+    };
+    const { data, error } = await ins
+      .insert({
+        workspace_id: ctx.workspaceId,
+        created_by: ctx.userId,
+        full_name: fullName,
+        email: args.email ?? null,
+        phone: args.phone ?? null,
+        company: args.company ?? null,
+        job_title: args.job_title ?? null,
+        status,
+        notes: args.notes ?? null,
+        source: "agent",
+      })
+      .select("id")
+      .single();
+    if (error || !data) return { error: String(error ?? "fail") };
+    return { id: data.id, ok: true };
+  }
+
+  if (call.function.name === "add_activity") {
+    const contactId = String(args.contact_id ?? "").trim();
+    const title = String(args.title ?? "").trim();
+    if (!contactId || !title) return { error: "contact_id e title obrigatórios" };
+    const type = ["note", "call", "email", "meeting", "task"].includes(String(args.type))
+      ? String(args.type)
+      : "note";
+    const ins = sb.from("crm_activities") as unknown as {
+      insert: (r: unknown) => Promise<{ error: unknown }>;
+    };
+    const { error } = await ins.insert({
+      workspace_id: ctx.workspaceId,
+      contact_id: contactId,
+      user_id: ctx.userId,
+      agent_id: ctx.agentId,
+      type,
+      title,
+      body: args.body ?? null,
+    });
+    if (error) return { error: String(error) };
+    return { ok: true };
+  }
+
+  return { error: "unknown_tool" };
+}
+
 async function embed(text: string): Promise<number[]> {
   const res = await fetch(`${GATEWAY_URL}/embeddings`, {
     method: "POST",
