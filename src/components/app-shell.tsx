@@ -25,7 +25,7 @@ import { logAuditEvent } from "@/lib/audit.functions";
 
 const NAV = [
   { to: "/app", label: "Visão geral", icon: LayoutDashboard, exact: true },
-  { to: "/app/crm", label: "CRM", icon: UsersRound },
+  { to: "/app/crm", label: "CRM", icon: UsersRound, exact: true },
   { to: "/app/crm/pipeline", label: "Pipeline", icon: KanbanSquare },
   { to: "/app/templates", label: "Templates", icon: Sparkles },
   { to: "/app/executions", label: "Execuções", icon: History },
