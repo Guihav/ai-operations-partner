@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Plug,
   Plus,
   Settings,
   Sparkles,
@@ -18,7 +19,7 @@ import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { useServerFn } from "@tanstack/react-start";
 import { logAuditEvent } from "@/lib/audit.functions";
@@ -29,17 +30,15 @@ const NAV = [
   { to: "/app/crm/pipeline", label: "Pipeline", icon: KanbanSquare },
   { to: "/app/templates", label: "Templates", icon: Sparkles },
   { to: "/app/executions", label: "Execuções", icon: History },
+  { to: "/app/integrations", label: "Integrações", icon: Plug },
   { to: "/app/team", label: "Equipe", icon: Users },
   { to: "/app/audit", label: "Auditoria", icon: ClipboardList },
   { to: "/app/settings", label: "Configurações", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  return (
-    <WorkspaceProvider>
-      <AppShellInner>{children}</AppShellInner>
-    </WorkspaceProvider>
-  );
+  // WorkspaceProvider is mounted by the _authenticated route layout.
+  return <AppShellInner>{children}</AppShellInner>;
 }
 
 function AppShellInner({ children }: { children: ReactNode }) {
