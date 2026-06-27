@@ -18,9 +18,11 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
 import { Route as AuthenticatedAppExecutionsRouteImport } from './routes/_authenticated/app.executions'
 import { Route as AuthenticatedAppAuditRouteImport } from './routes/_authenticated/app.audit'
 import { Route as AuthenticatedAppCrmIndexRouteImport } from './routes/_authenticated/app.crm.index'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as AuthenticatedAppCrmPipelineRouteImport } from './routes/_authenticated/app.crm.pipeline'
 import { Route as AuthenticatedAppAgentsNewRouteImport } from './routes/_authenticated/app.agents.new'
 import { Route as AuthenticatedAppAgentsAgentIdRouteImport } from './routes/_authenticated/app.agents.$agentId'
@@ -71,6 +73,12 @@ const AuthenticatedAppSettingsRoute =
     path: '/app/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/app/integrations',
+    path: '/app/integrations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppExecutionsRoute =
   AuthenticatedAppExecutionsRouteImport.update({
     id: '/app/executions',
@@ -87,6 +95,12 @@ const AuthenticatedAppCrmIndexRoute =
     id: '/app/crm/',
     path: '/app/crm/',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedAppCrmPipelineRoute =
   AuthenticatedAppCrmPipelineRouteImport.update({
@@ -114,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/app/audit': typeof AuthenticatedAppAuditRoute
   '/app/executions': typeof AuthenticatedAppExecutionsRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
@@ -121,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
   '/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/app/crm/': typeof AuthenticatedAppCrmIndexRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +146,7 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof InviteTokenRoute
   '/app/audit': typeof AuthenticatedAppAuditRoute
   '/app/executions': typeof AuthenticatedAppExecutionsRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
@@ -137,6 +154,7 @@ export interface FileRoutesByTo {
   '/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
   '/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/app/crm': typeof AuthenticatedAppCrmIndexRoute
 }
 export interface FileRoutesById {
@@ -148,6 +166,7 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/app/audit': typeof AuthenticatedAppAuditRoute
   '/_authenticated/app/executions': typeof AuthenticatedAppExecutionsRoute
+  '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
@@ -155,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/app/agents/$agentId': typeof AuthenticatedAppAgentsAgentIdRoute
   '/_authenticated/app/agents/new': typeof AuthenticatedAppAgentsNewRoute
   '/_authenticated/app/crm/pipeline': typeof AuthenticatedAppCrmPipelineRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/_authenticated/app/crm/': typeof AuthenticatedAppCrmIndexRoute
 }
 export interface FileRouteTypes {
@@ -166,6 +186,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/app/audit'
     | '/app/executions'
+    | '/app/integrations'
     | '/app/settings'
     | '/app/team'
     | '/app/templates'
@@ -173,6 +194,7 @@ export interface FileRouteTypes {
     | '/app/agents/$agentId'
     | '/app/agents/new'
     | '/app/crm/pipeline'
+    | '/api/public/whatsapp/webhook'
     | '/app/crm/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -182,6 +204,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/app/audit'
     | '/app/executions'
+    | '/app/integrations'
     | '/app/settings'
     | '/app/team'
     | '/app/templates'
@@ -189,6 +212,7 @@ export interface FileRouteTypes {
     | '/app/agents/$agentId'
     | '/app/agents/new'
     | '/app/crm/pipeline'
+    | '/api/public/whatsapp/webhook'
     | '/app/crm'
   id:
     | '__root__'
@@ -199,6 +223,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/_authenticated/app/audit'
     | '/_authenticated/app/executions'
+    | '/_authenticated/app/integrations'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/team'
     | '/_authenticated/app/templates'
@@ -206,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/agents/$agentId'
     | '/_authenticated/app/agents/new'
     | '/_authenticated/app/crm/pipeline'
+    | '/api/public/whatsapp/webhook'
     | '/_authenticated/app/crm/'
   fileRoutesById: FileRoutesById
 }
@@ -215,6 +241,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -282,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/integrations': {
+      id: '/_authenticated/app/integrations'
+      path: '/app/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/executions': {
       id: '/_authenticated/app/executions'
       path: '/app/executions'
@@ -302,6 +336,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/crm/'
       preLoaderRoute: typeof AuthenticatedAppCrmIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/crm/pipeline': {
       id: '/_authenticated/app/crm/pipeline'
@@ -330,6 +371,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppAuditRoute: typeof AuthenticatedAppAuditRoute
   AuthenticatedAppExecutionsRoute: typeof AuthenticatedAppExecutionsRoute
+  AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppTemplatesRoute: typeof AuthenticatedAppTemplatesRoute
@@ -343,6 +385,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppAuditRoute: AuthenticatedAppAuditRoute,
   AuthenticatedAppExecutionsRoute: AuthenticatedAppExecutionsRoute,
+  AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppTemplatesRoute: AuthenticatedAppTemplatesRoute,
@@ -362,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InviteTokenRoute: InviteTokenRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

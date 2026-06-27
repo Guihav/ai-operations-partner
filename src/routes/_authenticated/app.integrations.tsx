@@ -112,8 +112,12 @@ function IntegrationsPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!currentWorkspaceId) return;
-    if (!integ && !form.accessToken) {
-      toast.error("Cole o Access Token do WhatsApp Business.");
+    if (!form.accessToken) {
+      toast.error(
+        integ
+          ? "Cole o Access Token novamente para confirmar a alteração."
+          : "Cole o Access Token do WhatsApp Business.",
+      );
       return;
     }
     setSaving(true);
@@ -124,12 +128,11 @@ function IntegrationsPage() {
           phoneNumberId: form.phoneNumberId.trim(),
           businessAccountId: form.businessAccountId.trim() || null,
           displayPhoneNumber: form.displayPhoneNumber.trim() || null,
-          // se editar e não digitar nada, mantemos o token salvo
-          accessToken: form.accessToken || integ ? form.accessToken || "__keep__" : form.accessToken,
+          accessToken: form.accessToken,
           verifyToken: form.verifyToken.trim(),
           defaultAgentId: form.defaultAgentId || null,
           isActive: form.isActive,
-        } as Parameters<typeof upsertFn>[0]["data"],
+        },
       });
       toast.success("Integração com WhatsApp salva.");
       queryClient.invalidateQueries({ queryKey: ["whatsapp-integration"] });

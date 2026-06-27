@@ -160,7 +160,7 @@ export const sendWhatsAppMessage = createServerFn({ method: "POST" })
       body: data.body,
       status: "sent",
       wa_message_id: waId,
-      raw: json as unknown as Record<string, unknown>,
+      raw: JSON.parse(JSON.stringify(json)),
     });
 
     return { ok: true, waMessageId: waId };

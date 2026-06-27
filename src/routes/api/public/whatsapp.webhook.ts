@@ -144,7 +144,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 to_phone: metadata?.display_phone_number ?? null,
                 body,
                 status: "received",
-                raw: msg as unknown as Record<string, unknown>,
+                raw: JSON.parse(JSON.stringify(msg)),
               });
               // TODO: optional auto-reply via integ.default_agent_id
             }
