@@ -653,6 +653,123 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_integrations: {
+        Row: {
+          access_token: string
+          app_secret: string | null
+          business_account_id: string | null
+          created_at: string
+          default_agent_id: string | null
+          display_phone_number: string | null
+          id: string
+          is_active: boolean
+          phone_number_id: string
+          updated_at: string
+          verify_token: string
+          workspace_id: string
+        }
+        Insert: {
+          access_token: string
+          app_secret?: string | null
+          business_account_id?: string | null
+          created_at?: string
+          default_agent_id?: string | null
+          display_phone_number?: string | null
+          id?: string
+          is_active?: boolean
+          phone_number_id: string
+          updated_at?: string
+          verify_token: string
+          workspace_id: string
+        }
+        Update: {
+          access_token?: string
+          app_secret?: string | null
+          business_account_id?: string | null
+          created_at?: string
+          default_agent_id?: string | null
+          display_phone_number?: string | null
+          id?: string
+          is_active?: boolean
+          phone_number_id?: string
+          updated_at?: string
+          verify_token?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_integrations_default_agent_id_fkey"
+            columns: ["default_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_integrations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          contact_id: string | null
+          created_at: string
+          direction: string
+          from_phone: string | null
+          id: string
+          raw: Json | null
+          status: string | null
+          to_phone: string | null
+          wa_message_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          body?: string | null
+          contact_id?: string | null
+          created_at?: string
+          direction: string
+          from_phone?: string | null
+          id?: string
+          raw?: Json | null
+          status?: string | null
+          to_phone?: string | null
+          wa_message_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          body?: string | null
+          contact_id?: string | null
+          created_at?: string
+          direction?: string
+          from_phone?: string | null
+          id?: string
+          raw?: Json | null
+          status?: string | null
+          to_phone?: string | null
+          wa_message_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_invites: {
         Row: {
           accepted_at: string | null
