@@ -295,7 +295,7 @@ function IntegrationsPage() {
                 <Field
                   label={
                     integ
-                      ? "Access Token (deixe vazio para manter o atual)"
+                      ? "Access Token (cole novamente para atualizar)"
                       : "Access Token permanente *"
                   }
                   className="md:col-span-2"
